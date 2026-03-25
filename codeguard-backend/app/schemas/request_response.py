@@ -1,14 +1,27 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
 
-class AnalyzeRequest(BaseModel):
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+
+    model_config = {"from_attributes": True}
+
+class Token(BaseModel):
+    token: str
+
+class CodeRequest(BaseModel):
     code: str
 
 class Issue(BaseModel):
     type: str
-    message: str
+    description: str
     severity: str  # critical, high, medium, low
-    line: Optional[int] = None
+    line_number: Optional[int] = None
 
 class AnalyzeResponse(BaseModel):
     language: str

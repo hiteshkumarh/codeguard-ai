@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.api import routes
 from app.database import Base, engine
+import app.models.user_model  # Import user model to ensure table gets created by Base.metadata.create_all
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -11,7 +12,7 @@ app = FastAPI(title="CodeGuard Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,7 +27,7 @@ def startup_event():
     logger = get_logger(__name__)
     
     if not settings.GROQ_API_KEY:
-        logger.error("GROQ_API_KEY is not configured")
+        logger.info("GROQ_API_KEY not set, AI features disabled")
 
 @app.get("/")
 def read_root():

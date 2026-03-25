@@ -19,9 +19,9 @@ class LLMEngine:
         Return the result EXACTLY as a JSON object with two keys:
         - "issues": a JSON array of objects with the following keys:
           - "type": A short category for the rule/issue (e.g. "Readability", "Code Style", "Security Risk")
-          - "message": A description of the issue
+          - "description": A description of the issue
           - "severity": Must be one of "critical", "high", "medium", or "low"
-          - "line": The approximate line number where the issue occurs (integer)
+          - "line_number": The approximate line number where the issue occurs (integer)
         - "summary": A 1-2 sentence overall summary of the code and its issues.
         
         Do not include any markdown formatting, only the raw JSON object.
@@ -37,8 +37,8 @@ class LLMEngine:
         summary = ""
         
         if not self.api_key:
-            logger.warning("GROQ_API_KEY is empty. Skipping AI analysis.")
-            return [], "GROQ_API_KEY not configured. AI analysis skipped.", "failed"
+            logger.info("GROQ_API_KEY not set, AI features disabled")
+            return [], "GROQ_API_KEY not configured. AI analysis skipped.", "skipped"
 
         logger.info(f"LLM Engine starting - Key Loaded: {bool(self.api_key)}, Model: {self.model}, Base URL: {self.base_url}")
         
@@ -110,10 +110,10 @@ class LLMEngine:
                 
                 # Cleanup fields
                 issue_type = str(item.get("type", "Code Quality")).strip()
-                issue_msg = str(item.get("message", "Unknown issue")).strip()
+                issue_msg = str(item.get("description", "Unknown issue")).strip()
                 
                 # Ensure line is int or None
-                line_val = item.get("line")
+                line_val = item.get("line_number")
                 try:
                     line_parsed = int(line_val) if line_val is not None else None
                 except (ValueError, TypeError):
@@ -121,10 +121,11 @@ class LLMEngine:
                 
                 issues.append(Issue(
                     type=issue_type,
-                    message=issue_msg,
+                    description=issue_msg,
                     severity=sev_lower,
-                    line=line_parsed
+                    line_number=line_parsed
                 ))
+
                 
         except (requests.exceptions.RequestException, json.JSONDecodeError, Exception) as e:
             logger.error(f"LLM Engine error: {e}")
